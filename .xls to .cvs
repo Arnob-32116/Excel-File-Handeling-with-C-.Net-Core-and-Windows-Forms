@@ -1,1 +1,69 @@
+using System.IO;
+using Microsoft.Office.Interop.Excel;
+
+namespace WinFormsApp1
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            string sourceFolderPath = @"C:\source_folder"; // replace with your source folder path
+            string destFolderPath = @"C:\destination_folder"; // replace with your destination folder path
+            Microsoft.Office.Interop.Excel.Application excel = new Microsoft.Office.Interop.Excel.Application();
+
+            try
+            {
+                // Loop through all files in the source folder with .xls extension
+                foreach (string filePath in Directory.GetFiles(sourceFolderPath, "*.xls"))
+                {
+                    // Open the Excel file
+                    Workbook workbook = excel.Workbooks.Open(filePath);
+
+                    // Loop through all worksheets in the workbook
+                    foreach (Worksheet worksheet in workbook.Worksheets)
+                    {
+                        // Define the range of cells you want to extract data from
+                        Range range = worksheet.UsedRange;
+
+                        // Convert the range to a 2D array
+                        object[,] values = (object[,])range.Value;
+
+                        // Create a new .csv file with the same name as the Excel file
+                        string csvFilePath = Path.Combine(destFolderPath, Path.GetFileNameWithoutExtension(filePath) + ".csv");
+                        StreamWriter writer = new StreamWriter(csvFilePath);
+
+                        // Loop through the 2D array and write each value to the .csv file
+                        for (int i = 1; i <= values.GetLength(0); i++)
+                        {
+                            for (int j = 1; j <= values.GetLength(1); j++)
+                            {
+                                writer.Write(values[i, j] + ",");
+                            }
+                            writer.WriteLine();
+                        }
+
+                        // Close the .csv file and the Excel workbook
+                        writer.Close();
+                        workbook.Close();
+                    }
+                }
+                MessageBox.Show("Files converted and saved successfully.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("An error occurred: " + ex.Message);
+            }
+            finally
+            {
+                // Quit the Excel application
+                excel.Quit();
+            }
+        }
+    }
+}
 
